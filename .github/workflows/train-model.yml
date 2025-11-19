@@ -1,0 +1,46 @@
+name: Train and Release Model
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  train-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Train model
+        run: |
+          source venv/bin/activate
+          python src/text_classification.py
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update
+          sudo apt install -y gh
+
+      - name: Create GitHub Release using CLI
+        run: |
+          RELEASE_NAME="model-$(date +%Y%m%d%H%M%S)"
+          gh release create "$RELEASE_NAME" output/model.joblib \
+            --notes "Automated training release triggered from workflow"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
