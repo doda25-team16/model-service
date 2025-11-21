@@ -7,10 +7,27 @@ The following sections will explain you how to get started.
 The project **requires a Python 3.12 environment** to run (tested with 3.12.9).
 Use the `requirements.txt` file to restore the required dependencies in your environment.
 
+### Building the Container:
+```
+docker build . -t sms-model
+```
 
+### Running the Container w/ Volume Mounts:
+
+- Provided with a volume mount and a given model, it would use the provided model.
+- If -v is omitted, it will download a model from release and still run but the model file will not persist
+- Provided a valid -v, it will either use the provided model (if it actually exists) or downloads the release file and save it under the name
+```
+docker run --rm \
+        -p 8081:8081 \
+        -e MODEL_FILE=mymodel.joblib \
+        -v ./hostdir:/models \
+        sms-model
+```
 ### Training the Model
 
 To train the model, you have two options.
+
 Either you create a local environment...
 
     $ python -m venv venv
