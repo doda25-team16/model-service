@@ -1,0 +1,6 @@
+[control]
+vagrant@192.168.56.100
+
+[node]
+vagrant@192.168.56.101
+vagrant@192.168.56.102

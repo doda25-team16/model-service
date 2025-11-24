@@ -1,0 +1,5 @@
+- hosts: all
+  tasks:
+    - name: Task
+      ansible.builtin.debug:
+        msg: "This playbook is empty - added this to prevent error from provisioning"
