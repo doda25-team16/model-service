@@ -1,0 +1,59 @@
+- hosts: all
+  become: yes
+  vars:
+    ssh_public_keys:
+      - "{{ playbook_dir }}/ssh_keys/johnylamw.pub" 
+      # TODO add a secondary key
+  tasks:
+    - name: Register team SSH public keys for vagrant user
+      ansible.builtin.authorized_key:
+        user: vagrant
+        state: present
+        key: "{{ lookup('file', item) }}"
+      loop: "{{ ssh_public_keys }}"
+
+    - name: Disable swap for running session (#5a)
+      ansible.builtin.command: swapoff -a
+
+    - name: Disable swap permanently by commenting it out from /etc/fstab (#5b)
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^([^#].*\s+swap\s+.*)$' # AI-generated regular-expression
+        line: '# \1' # Comments out any lines
+        backrefs: yes
+
+    - name: Creating k8s.conf file (#6)
+      ansible.builtin.copy:
+        # copy - omits src to create a new file
+        content: |
+          overlay
+          br_netfilter
+        dest: /etc/modules-load.d/k8s.conf
+
+    - name: Load overlay (#6)
+      community.general.modprobe:
+        name: overlay
+        state: present
+
+    - name: Load br_netfilter (#6)
+      community.general.modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: Enable IPv4 Forwarding (#7)
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: true
+    
+    - name: Enable Bridge IP Tables (#7)
+      ansible.posix.sysctl:
+        name: net.bridge.bridge-nf-call-iptables
+        value: '1'
+        sysctl_set: true
+    
+    - name: Enable Bridge IP6 Tables (#7)
+      ansible.posix.sysctl:
+        name: net.bridge.bridge-nf-call-ip6tables
+        value: '1'
+        sysctl_set: true
