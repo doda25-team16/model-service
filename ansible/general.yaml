@@ -96,3 +96,36 @@
           - runc
         state: present
         update_cache: yes
+
+    - name: Create /etc/containerd (#11)
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: directory
+
+    - name: Get default containerd config (#11)
+      ansible.builtin.shell: containerd config default > /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml
+
+    - name: Disable AppArmor (#11)
+      ansible.builtin.lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: '^\s*disable_apparmor\s*='
+        line: '    disable_apparmor = true'
+
+    - name: Set sandbox image (#11)
+      ansible.builtin.lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: '^\s*sandbox_image\s*='
+        line: '    sandbox_image = "registry.k8s.io/pause:3.10"'
+
+    - name: Set SystemdCgroup to true (#11)
+      ansible.builtin.lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: '^\s*SystemdCgroup\s*='
+        line: '           SystemdCgroup = true'
+
+    - name: Restart service containerd (#11)
+      ansible.builtin.service:
+        name: containerd
+        state: restarted
