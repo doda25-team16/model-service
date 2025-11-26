@@ -62,3 +62,20 @@
       ansible.builtin.template:
         src: templates/hosts.j2
         dest: /etc/hosts
+
+    - name: Get Kubernetes key and dearmor it (#9)
+      ansible.builtin.shell: |
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key \
+        | gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg
+      args:
+        creates: /etc/apt/keyrings/kubernetes.gpg
+
+    - name: Add Kubernetes repo (#9)
+      apt_repository:
+        repo: deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /
+        state: present
+        filename: kubernetes
+
+    - name: Update apt cache (#9)
+      ansible.builtin.apt:
+        update_cache: yes
