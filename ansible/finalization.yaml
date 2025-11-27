@@ -1,0 +1,25 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: Install MetalLB CRDs
+      become_user: vagrant
+      ansible.builtin.shell: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.9/config/manifests/metallb-native.yaml --insecure-skip-tls-verify=true
+      args:
+        creates: /home/vagrant/.metallb-installed
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
+
+    - name: Wait for MetalLB controller to be ready
+      become_user: vagrant
+      ansible.builtin.command: kubectl wait -n metallb-system -l app=metallb,component=controller --for=condition=ready pod --timeout=60s
+      register: metallb_wait
+      retries: 3
+      delay: 10
+      until: metallb_wait.rc == 0
+
+    # TODO these when steps 12-19 are finished (otherwise cant run)
+    # - name: Create IPAddressPool configuration
+    # - name: Apply IPAddressPool
+    # - name: Create L2Advertisement configuration
+    # - name: Apply L2Advertisement
+    
