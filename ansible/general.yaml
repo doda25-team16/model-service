@@ -129,3 +129,9 @@
       ansible.builtin.service:
         name: containerd
         state: restarted
+
+    - name: Start and enable kubelet service (#12)
+      ansible.builtin.systemd:
+        name: kubelet
+        state: started
+        enabled: yes
