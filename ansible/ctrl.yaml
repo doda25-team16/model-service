@@ -39,4 +39,10 @@
         group: vagrant
       when: kubeconfig_after.stat.exists
 
+    - name: Copy admin.conf to host machine
+      fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: ./admin.conf
+        flat: yes
+      when: kubeconfig_after.stat.exists
 
