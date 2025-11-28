@@ -1,5 +1,42 @@
-- hosts: all
+---
+- hosts: ctrl
+  become: yes
   tasks:
-    - name: Task
-      ansible.builtin.debug:
-        msg: "This playbook is empty - added this to prevent error from provisioning"
+
+    - name: Check if Kubernetes cluster is already initialized
+      stat:
+        path: /etc/kubernetes/admin.conf
+      register: kubeconfig
+
+    - name: Initialize Kubernetes cluster with kubeadm
+      command: >
+        kubeadm init
+        --apiserver-advertise-address=192.168.56.100
+        --node-name=ctrl
+        --pod-network-cidr=10.244.0.0/16
+        --ignore-preflight-errors=NumCPU
+      become: true
+      when: not kubeconfig.stat.exists
+
+    - name: Re-check for admin.conf after init
+      stat:
+        path: /etc/kubernetes/admin.conf
+      register: kubeconfig_after
+
+    - name: Ensure .kube directory exists for vagrant
+      file:
+        path: /home/vagrant/.kube
+        state: directory
+        owner: vagrant
+        group: vagrant
+
+    - name: Copy admin.conf so vagrant can use kubectl
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/vagrant/.kube/config
+        remote_src: yes
+        owner: vagrant
+        group: vagrant
+      when: kubeconfig_after.stat.exists
+
+
