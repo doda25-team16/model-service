@@ -208,3 +208,6 @@ __marimo__/
 
 # Vagrant
 .vagrant/
+
+# kubernetes admin config file
+admin.conf
