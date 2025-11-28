@@ -1,0 +1,92 @@
+---
+- hosts: ctrl
+  become: yes
+  tasks:
+
+    # ============================================
+    # STEP 22: KUBERNETES DASHBOARD (SAFE VERSION)
+    # ============================================
+
+    # Install Helm if missing
+    - name: Check if Helm is installed
+      become_user: vagrant
+      ansible.builtin.command: which helm
+      register: helm_check
+      ignore_errors: yes
+
+    - name: Download Helm install script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get_helm.sh
+        mode: '0700'
+      when: helm_check.rc != 0
+
+    - name: Install Helm
+      ansible.builtin.shell: /tmp/get_helm.sh
+      when: helm_check.rc != 0
+
+    # Add and update Dashboard repo
+    - name: Add Kubernetes Dashboard repo
+      become_user: vagrant
+      ansible.builtin.command: helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
+      ignore_errors: yes
+
+    - name: Update Helm repos
+      become_user: vagrant
+      ansible.builtin.command: helm repo update
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
+
+    # Install Dashboard using Helm
+    - name: Install Dashboard
+      become_user: vagrant
+      ansible.builtin.command: >
+        helm upgrade --install kubernetes-dashboard
+        kubernetes-dashboard/kubernetes-dashboard
+        --namespace kubernetes-dashboard
+        --create-namespace
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
+
+    # Create ServiceAccount
+    - name: Write ServiceAccount YAML
+      ansible.builtin.copy:
+        dest: /tmp/dashboard-adminuser.yaml
+        content: |
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: admin-user
+            namespace: kubernetes-dashboard
+
+    - name: Apply ServiceAccount
+      become_user: vagrant
+      ansible.builtin.command: kubectl apply -f /tmp/dashboard-adminuser.yaml
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config
+
+    # Create ClusterRoleBinding
+    - name: Write ClusterRoleBinding YAML
+      ansible.builtin.copy:
+        dest: /tmp/dashboard-clusterrolebinding.yaml
+        content: |
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: admin-user
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: cluster-admin
+          subjects:
+          - kind: ServiceAccount
+            name: admin-user
+            namespace: kubernetes-dashboard
+
+    - name: Apply ClusterRoleBinding
+      become_user: vagrant
+      ansible.builtin.command: kubectl apply -f /tmp/dashboard-clusterrolebinding.yaml
+      environment:
+        KUBECONFIG: /home/vagrant/.kube/config

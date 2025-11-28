@@ -38,6 +38,18 @@ Vagrant.configure("2") do |config|
       ctrl_ansible.compatibility_mode = "2.0"
       ctrl_ansible.playbook = "ansible/ctrl.yaml"
     end
+
+    # Step 22: Install Kubernetes Dashboard
+    ctrl.vm.provision :ansible do |dashboard|
+      dashboard.compatibility_mode = "2.0"
+      dashboard.playbook = "ansible/dashboard.yaml"
+    end
+
+    # Step 23: Install Istio
+    ctrl.vm.provision :ansible do |istio|
+      istio.compatibility_mode = "2.0"
+      istio.playbook = "ansible/istio.yaml"
+    end
   end
 
   # Worker Nodes
