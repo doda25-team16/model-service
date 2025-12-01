@@ -46,3 +46,16 @@
         flat: yes
       when: kubeconfig_after.stat.exists
 
+    # Step 15: Create Pod Network
+    - name: Copy Flannel manifest to controller
+      copy:
+        src: kube-flannel.yml
+        dest: /home/vagrant/kube-flannel.yml
+        owner: vagrant
+        group: vagrant
+        mode: '0644'
+
+    - name: Apply Flannel manifest
+      command: kubectl apply -f /home/vagrant/kube-flannel.yml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
