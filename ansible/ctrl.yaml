@@ -30,6 +30,7 @@
         owner: vagrant
         group: vagrant
 
+# Step 14: Setup kubectl
     - name: Copy admin.conf so vagrant can use kubectl
       copy:
         src: /etc/kubernetes/admin.conf
@@ -39,8 +40,14 @@
         group: vagrant
       when: kubeconfig_after.stat.exists
 
-# Step 16: Install Helm
+    - name: Copy admin.conf to host machine
+      fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: ./admin.conf
+        flat: yes
+      when: kubeconfig_after.stat.exists
 
+# Step 16: Install Helm
     - name: Install required packages for Helm
       apt:
         name:

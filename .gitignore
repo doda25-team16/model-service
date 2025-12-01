@@ -209,5 +209,5 @@ __marimo__/
 # Vagrant
 .vagrant/
 
-# Ansible
+# kubernetes admin config file
 ansible/admin.conf
