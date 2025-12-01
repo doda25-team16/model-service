@@ -30,6 +30,7 @@
         owner: vagrant
         group: vagrant
 
+# Step 14: Setup kubectl
     - name: Copy admin.conf so vagrant can use kubectl
       copy:
         src: /etc/kubernetes/admin.conf
@@ -46,7 +47,7 @@
         flat: yes
       when: kubeconfig_after.stat.exists
 
-    # Step 15: Create Pod Network
+# Step 15: Create Pod Network
     - name: Copy Flannel manifest to controller
       copy:
         src: kube-flannel.yml
@@ -59,3 +60,37 @@
       command: kubectl apply -f /home/vagrant/kube-flannel.yml
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
+
+# Step 16: Install Helm
+    - name: Install required packages for Helm
+      apt:
+        name:
+          - curl
+          - gpg
+          - apt-transport-https
+        state: present
+        update_cache: yes
+
+    - name: Download Helm GPG key and dearmor it
+      shell: |
+        curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey \
+        | gpg --dearmor \
+        | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+      args:
+        executable: /bin/bash
+
+    - name: Add Helm APT repository
+      copy:
+        dest: /etc/apt/sources.list.d/helm-stable-debian.list
+        content: |
+          deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main
+
+    - name: Update apt 
+      apt:
+        update_cache: yes
+
+    - name: Install Helm
+      apt:
+        name: helm
+        state: present
+
