@@ -1,6 +1,7 @@
 - hosts: all
   become: yes
   tasks:
+    # Step 20: Install MetalLB
     - name: Install MetalLB CRDs (#20a)
       become_user: vagrant
       ansible.builtin.shell: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.9/config/manifests/metallb-native.yaml --insecure-skip-tls-verify=true
@@ -59,6 +60,7 @@
       environment:
         KUBECONFIG: /home/vagrant/.kube/config
 
+    # Step 21: Install Nginx Ingress Controller
     - name: Add Nginx Ingress Helm repository (#21a)
       become_user: vagrant
       ansible.builtin.command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
