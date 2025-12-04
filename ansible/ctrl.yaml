@@ -1,5 +1,5 @@
 ---
-- hosts: ctrl
+- hosts: all
   become: yes
   tasks:
 
@@ -15,7 +15,6 @@
         --node-name=ctrl
         --pod-network-cidr=10.244.0.0/16
         --ignore-preflight-errors=NumCPU
-      become: true
       when: not kubeconfig.stat.exists
 
     - name: Re-check for admin.conf after init
