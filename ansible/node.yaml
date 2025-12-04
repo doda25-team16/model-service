@@ -1,5 +1,27 @@
-- hosts: all
+---
+- hosts: node-*
+  become: yes
   tasks:
-    - name: Task
-      ansible.builtin.debug:
-        msg: "This playbook is empty - added this to prevent error from provisioning"
+    - name: Install worker dependencies
+      debug: 
+        msg: "This is where kubernetes worker setup happens"
+
+    - name: Check if worker node already joined the cluster
+      ansible.builtin.stat:
+        path: /etc/kubernetes/kubelet.conf
+      register: kubelet_conf
+
+    # Step 18
+    - name: Generate kubeadm join command
+      delegate_to: ctrl
+      become: yes
+      command: kubeadm token create --print-join-command
+      register: join_cmd
+      changed_when: false
+
+    # Step 19
+    - name: Join cluster
+      become: yes
+      shell: "{{ join_cmd.stdout }} --ignore-preflight-errors=all"
+      args:
+        creates: /etc/kubernetes/kubelet.conf

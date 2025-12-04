@@ -93,3 +93,17 @@
         name: helm
         state: present
 
+# Step 17: Install Helm package
+    - name: Check if helm-diff is already installed
+      become: yes
+      become_user: vagrant
+      command: helm plugin list
+      register: helm_plugins
+      changed_when: false
+
+    - name: Install helm-diff plugin
+      become: yes
+      become_user: vagrant
+      command: helm plugin install https://github.com/databus23/helm-diff
+      when: "'diff' not in helm_plugins.stdout"
+
