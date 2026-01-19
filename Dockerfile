@@ -21,6 +21,7 @@ COPY smsspamcollection/ /root/smsspamcollection/
 COPY output/ /root/output/
 
 ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONPATH=/root/src
 ENV MODEL_PORT="8081"
 
 EXPOSE 8081

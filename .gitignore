@@ -211,3 +211,7 @@ __marimo__/
 
 # kubernetes admin config file
 ansible/admin.conf
+
+# Release artifacts
+*.tar.gz
+model-release.tar.gz
