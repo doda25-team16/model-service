@@ -72,6 +72,27 @@ print(f"Loaded model from {MODEL_PATH}")
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    """
+    Predict whether an SMS is Spam.
+    ---
+    consumes:
+      - application/json
+    parameters:
+        - name: input_data
+          in: body
+          description: message to be classified.
+          required: True
+          schema:
+            type: object
+            required: sms
+            properties:
+                sms:
+                    type: string
+                    example: This is an example of an SMS.
+    responses:
+      200:
+        description: "The result of the classification: 'spam' or 'ham'."
+    """
     input_data = request.get_json(silent=True) or {}
     sms = input_data.get('sms')
 
