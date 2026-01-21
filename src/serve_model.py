@@ -31,11 +31,23 @@ def extract_tgz(tgz_path: Path, dest_dir: Path):
     with tarfile.open(tgz_path, "r:gz") as tar:
         tar.extractall(path=dest_dir)
 
-# Priority 1: MODEL_URL (your release asset) -> extract -> find joblib
+# Priority 1: MODEL_URL (release asset) -> download once (cache) -> extract once -> find joblib
 if MODEL_URL:
     tgz_path = MODEL_DIR / "model-release.tar.gz"
-    download(MODEL_URL, tgz_path)
-    extract_tgz(tgz_path, MODEL_DIR)
+    extracted_marker = MODEL_DIR / ".extracted_ok"
+
+    # Download only if not already cached
+    if not tgz_path.is_file():
+        download(MODEL_URL, tgz_path)
+    else:
+        print(f"Using cached artifact at {tgz_path}; skipping download.")
+
+    # Extract only once (because /models is a volume)
+    if not extracted_marker.is_file():
+        extract_tgz(tgz_path, MODEL_DIR)
+        extracted_marker.write_text("ok\n", encoding="utf-8")
+    else:
+        print(f"Extraction already done ({extracted_marker}); skipping extract.")
 
     # Common locations after extraction:
     candidate_paths = [
@@ -56,12 +68,14 @@ if MODEL_URL:
 elif MODEL_PATH.is_file():
     print(f"Using existing model at {MODEL_PATH}")
 
-# Priority 3 (optional fallback): hardcoded default model
+# Priority 3 (optional fallback): hardcoded default model (downloads into /models cache)
 else:
     print(f"[WARNING]: {MODEL_FILE} not found and MODEL_URL not set.")
     tag = "model-20251119230101"
-    asset_name = "model.joblib"
-    pre_existing_model_url = f"https://github.com/doda25-team16/model-service/releases/download/{tag}/{asset_name}"
+    asset_name = MODEL_FILE  # keep consistent with MODEL_FILE env var
+    pre_existing_model_url = (
+        f"https://github.com/doda25-team16/model-service/releases/download/{tag}/{asset_name}"
+    )
     download(pre_existing_model_url, MODEL_PATH)
     print(f"Downloaded default model into {MODEL_PATH}")
 
