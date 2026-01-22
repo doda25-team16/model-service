@@ -67,12 +67,12 @@ def _preprocess(messages):
     )
 
     preprocessed_data = preprocessor.fit_transform(messages['message'])
-    dump(preprocessor, 'models/preprocessor.joblib')
-    dump(preprocessed_data, 'models/preprocessed_data.joblib')
+    dump(preprocessor, 'output/preprocessor.joblib')
+    dump(preprocessed_data, 'output/preprocessed_data.joblib')
     return preprocessed_data
 
 def prepare(message):
-    preprocessor = load('models/preprocessor.joblib')
+    preprocessor = load('output/preprocessor.joblib')
     return preprocessor.transform([message])
 
 
