@@ -8,7 +8,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # stage 2: final runtime image: install in root
-FROM --target-platform=$TARGETPLATFORM python:3.12.9-slim
+FROM python:3.12.9-slim
 WORKDIR /root
 COPY --from=builder /root/.local /root/.local
 COPY src/ /root/src/
