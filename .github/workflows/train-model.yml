@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   train-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -21,26 +21,31 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Train model
         run: |
-          source venv/bin/activate
           python src/text_classification.py
+
+      - name: Package model artifact (tar.gz)
+        run: |
+          mkdir -p model-release
+          cp output/model.joblib model-release/
+          tar -czf model-release.tar.gz -C model-release .
 
       - name: Install GitHub CLI
         run: |
-          sudo apt update
-          sudo apt install -y gh
+          sudo apt-get update
+          sudo apt-get install -y gh
 
       - name: Create GitHub Release using CLI
-        run: |
-          RELEASE_NAME="model-$(date +%Y%m%d%H%M%S)"
-          gh release create "$RELEASE_NAME" output/model.joblib \
-            --notes "Automated training release triggered from workflow"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="model-$(date +%Y%m%d%H%M%S)"
+          gh release create "$RELEASE_TAG" model-release.tar.gz \
+            --title "$RELEASE_TAG" \
+            --notes "Automated training release triggered from workflow"
+          echo "Release tag: $RELEASE_TAG"
 
