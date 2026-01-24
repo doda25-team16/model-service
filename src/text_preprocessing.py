@@ -4,7 +4,8 @@ Preprocess the data to be trained by the learning algorithm.
 
 import pandas as pd
 import numpy as np
-
+from pathlib import Path
+import os
 import string
 import nltk
 from nltk.corpus import stopwords
@@ -72,7 +73,21 @@ def _preprocess(messages):
     return preprocessed_data
 
 def prepare(message):
-    preprocessor = load('output/preprocessor.joblib')
+    model_dir = Path(os.getenv("MODEL_DIR", "/models"))
+
+    candidate_paths = [
+        model_dir / "preprocessor.joblib",
+        model_dir / "output" / "preprocessor.joblib",
+        model_dir / "outputs" / "preprocessor.joblib",
+    ]
+
+    pp_path = next((p for p in candidate_paths if p.is_file()), None)
+    if pp_path is None:
+        raise FileNotFoundError(
+            f"preprocessor.joblib not found. Tried: {candidate_paths}"
+        )
+
+    preprocessor = load(str(pp_path))
     return preprocessor.transform([message])
 
 
