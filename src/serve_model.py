@@ -63,10 +63,12 @@ if MODEL_URL:
         )
     MODEL_PATH = found
     print(f"Using model from extracted artifact: {MODEL_PATH}")
+    os.environ["EXTRACTED_MODEL_DIR"] = str(MODEL_PATH.parent)
 
 # Priority 2: local/volume file at /models/model.joblib
 elif MODEL_PATH.is_file():
     print(f"Using existing model at {MODEL_PATH}")
+    os.environ["EXTRACTED_MODEL_DIR"] = str(MODEL_PATH.parent)
 
 # Priority 3 (optional fallback): hardcoded default model (downloads into /models cache)
 else:
@@ -78,6 +80,7 @@ else:
     )
     download(pre_existing_model_url, MODEL_PATH)
     print(f"Downloaded default model into {MODEL_PATH}")
+    os.environ["EXTRACTED_MODEL_DIR"] = str(MODEL_PATH.parent)
 
 model = joblib.load(str(MODEL_PATH))
 print(f"Loaded model from {MODEL_PATH}")

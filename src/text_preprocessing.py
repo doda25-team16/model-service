@@ -73,19 +73,32 @@ def _preprocess(messages):
     return preprocessed_data
 
 def prepare(message):
-    model_dir = Path(os.getenv("MODEL_DIR", "/models"))
-
-    candidate_paths = [
-        model_dir / "preprocessor.joblib",
-        model_dir / "output" / "preprocessor.joblib",
-        model_dir / "outputs" / "preprocessor.joblib",
-    ]
-
-    pp_path = next((p for p in candidate_paths if p.is_file()), None)
-    if pp_path is None:
-        raise FileNotFoundError(
-            f"preprocessor.joblib not found. Tried: {candidate_paths}"
-        )
+    """
+    Load preprocessor and transform message.
+    Uses EXTRACTED_MODEL_DIR env var set by serve_model.py to find preprocessor.
+    """
+    extracted_dir = os.getenv("EXTRACTED_MODEL_DIR")
+    
+    if extracted_dir:
+        # Use the same directory where serve_model found the model
+        pp_path = Path(extracted_dir) / "preprocessor.joblib"
+        if not pp_path.is_file():
+            raise FileNotFoundError(
+                f"preprocessor.joblib not found at {pp_path}"
+            )
+    else:
+        # Fallback to searching (for standalone usage)
+        model_dir = Path(os.getenv("MODEL_DIR", "/models"))
+        candidate_paths = [
+            model_dir / "preprocessor.joblib",
+            model_dir / "output" / "preprocessor.joblib",
+            model_dir / "outputs" / "preprocessor.joblib",
+        ]
+        pp_path = next((p for p in candidate_paths if p.is_file()), None)
+        if pp_path is None:
+            raise FileNotFoundError(
+                f"preprocessor.joblib not found. Tried: {candidate_paths}"
+            )
 
     preprocessor = load(str(pp_path))
     return preprocessor.transform([message])
