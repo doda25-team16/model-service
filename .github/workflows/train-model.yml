@@ -24,7 +24,12 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Train model
+
+      - name: Train preprocessing model
+        run: |
+          python src/text_preprocessing.py
+
+      - name: Train text model
         run: |
           python src/text_classification.py
 
@@ -32,6 +37,7 @@ jobs:
         run: |
           mkdir -p model-release
           cp output/model.joblib model-release/
+          cp output/preprocessor.joblib model-release/
           tar -czf model-release.tar.gz -C model-release .
 
       - name: Install GitHub CLI
@@ -44,8 +50,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RELEASE_TAG="model-$(date +%Y%m%d%H%M%S)"
-          gh release create "$RELEASE_TAG" model-release.tar.gz \
+          gh release create "$RELEASE_TAG" \
+          model-release.tar.gz \
+          output/model.joblib \
+          output/preprocessor.joblib \
             --title "$RELEASE_TAG" \
-            --notes "Automated training release triggered from workflow"
+            --notes "Automated training release triggered from workflow" \
+            --latest
           echo "Release tag: $RELEASE_TAG"
-
