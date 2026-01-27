@@ -46,7 +46,7 @@ jobs:
           RELEASE_TAG="model-$(date +%Y%m%d%H%M%S)"
           gh release create "$RELEASE_TAG" model-release.tar.gz \
             --title "$RELEASE_TAG" \
-            --notes "Automated training release triggered from workflow" \ 
+            --notes "Automated training release triggered from workflow" \
             --latest
           echo "Release tag: $RELEASE_TAG"
 
