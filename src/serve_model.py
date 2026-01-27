@@ -19,6 +19,7 @@ MODEL_DIR = Path(os.getenv("MODEL_DIR", "/models"))
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 MODEL_URL = os.getenv("MODEL_URL")  # URL to model-release.tar.gz
 MODEL_FILE = os.getenv("MODEL_FILE", "model.joblib")
+PREPROCESS_FILE = os.getenv("PREPROCESS_FILE", "preprocessor.joblib")
 
 MODEL_PATH = MODEL_DIR / MODEL_FILE
 
@@ -63,25 +64,29 @@ if MODEL_URL:
         )
     MODEL_PATH = found
     print(f"Using model from extracted artifact: {MODEL_PATH}")
+    os.environ["EXTRACTED_MODEL_DIR"] = str(MODEL_PATH.parent)
 
 # Priority 2: local/volume file at /models/model.joblib
 elif MODEL_PATH.is_file():
     print(f"Using existing model at {MODEL_PATH}")
+    os.environ["EXTRACTED_MODEL_DIR"] = str(MODEL_PATH.parent)
 
 # Priority 3 (optional fallback): hardcoded default model (downloads into /models cache)
 else:
     print(f"[WARNING]: {MODEL_FILE} not found and MODEL_URL not set.")
-    tag = "model-20251119230101"
-    asset_name = MODEL_FILE  # keep consistent with MODEL_FILE env var
-    pre_existing_model_url = (
-        f"https://github.com/doda25-team16/model-service/releases/download/{tag}/{asset_name}"
-    )
-    download(pre_existing_model_url, MODEL_PATH)
-    print(f"Downloaded default model into {MODEL_PATH}")
+    tag = "fallback-release"
+    base_url = f"https://github.com/doda25-team16/model-service/releases/download/{tag}"
+    print(f"Downloading fallback model from {tag}...")
+    download(f"{base_url}/{MODEL_FILE}", MODEL_PATH)
+    print(f"Downloading fallback preprocessor from {tag}...")
+    pp_path = MODEL_DIR / PREPROCESS_FILE
+    download(f"{base_url}/{PREPROCESS_FILE}", pp_path)
+
+    print(f"Downloaded fallback assets into {MODEL_DIR}")
+
+    os.environ["EXTRACTED_MODEL_DIR"] = str(MODEL_PATH.parent)
 
 model = joblib.load(str(MODEL_PATH))
-print(f"Loaded model from {MODEL_PATH}")
-
 print(f"Loaded model from {MODEL_PATH}")
 
 @app.route('/predict', methods=['POST'])
